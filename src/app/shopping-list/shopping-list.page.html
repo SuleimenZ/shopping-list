@@ -1,0 +1,77 @@
+<ion-toolbar>
+    <ion-item id="header" color="tertiary">
+        <ion-title id="title" class="center-50" color="tertiary">{{shopList.name}}</ion-title>
+        <ion-button *ngIf="!edit" class="center-left" color="success" (click)="goBack()">
+            <ion-icon name="caret-back-outline"></ion-icon>
+        </ion-button>
+        <ion-button *ngIf="!edit" class="center-right" color="success" (click)="onEditButtonClick()">
+            <ion-label id="buttonText">EDIT</ion-label>
+            <ion-icon name="create-outline"></ion-icon>
+        </ion-button>
+        <ion-button *ngIf="edit" class="center-right" color="success" (click)="onSaveButtonClick()">
+            <ion-label id="buttonText">SAVE</ion-label>
+            <ion-icon name="save-outline"></ion-icon>
+        </ion-button>
+        <ion-button *ngIf="edit" class="center-left" color="danger" (click)="onCancelButtonClick()">
+            <ion-label id="buttonText">CANCEL</ion-label>
+            <ion-icon name="trash-outline"></ion-icon>
+        </ion-button>
+    </ion-item>
+    <ion-item color="tertiary">
+        <ion-label class="center-10" id="title">Item</ion-label>
+        <ion-icon class="center-60" name="list-outline"></ion-icon>
+        <ion-icon class="center-75" name="cash-outline"></ion-icon>
+    </ion-item>
+</ion-toolbar>
+
+<!-------------------------------- CONTENT TEMPLATE DEFAULT -------------------------------->
+<ion-content *ngIf="!edit">
+    <ion-list *ngFor="let shopitem of shopList?.list;index as i;" id="list">
+        <ion-item id="list" item="none">
+            <ion-label class="center-left" color="danger">{{i + 1}}</ion-label>
+            <ion-label class="center-10" color="secondary">{{shopitem.item?.name}}</ion-label>
+            <ion-label class="center-60" color="warning">{{shopitem?.quantity}}</ion-label>
+            <ion-label class="center-75" color="warning">{{shopitem.item?.price}}</ion-label>
+            <ion-checkbox class="center-right" color="danger"></ion-checkbox>
+        </ion-item>
+    </ion-list>
+    <ion-item color="success">
+        <ion-label class="center-10" id="total">Total</ion-label>
+        <ion-label class="center-60" id="total">{{getTotalQuantity()}}</ion-label>
+        <ion-label class="center-75" id="total">{{getTotalPrice()}}</ion-label>
+    </ion-item>
+</ion-content>
+
+<!--------------------------------- CONTENT TEMPLATE EDIT ---------------------------------->
+<ion-content *ngIf="edit">
+    <ion-list id="list">
+        <ion-item *ngFor="let shopitem of shopList?.list;index as i;" id="list" item="none">
+            <ion-label class="center-left" color="danger">{{i + 1}}</ion-label>
+            <ion-label class="center-10" color="secondary">{{shopitem.item?.name}}</ion-label>
+            <ion-label class="center-60" color="warning">{{shopitem?.quantity}}</ion-label>
+            <ion-label class="center-75" color="warning">{{shopitem.item?.price}}</ion-label>
+            <ion-button class="center-right" color="danger" (click)="removeItem(shopitem)">
+                <ion-icon name="close-circle-outline"></ion-icon>
+            </ion-button>
+        </ion-item>
+        <ion-item>
+            <ion-label class="center-left" color="secondary" hidden>Select an item</ion-label>
+            <ion-icon class="center-left" id="newId" color="danger" name="infinite-outline"></ion-icon>
+            <ion-select class="center-10" id="newItem" color="secondary" placeholder="Item" [(ngModel)]="selectedItem">
+                <ion-select-option *ngFor="let item of getItemsDifference()" value="{{item.name}}">{{item?.name}}</ion-select-option>
+            </ion-select>
+            <ion-item class="center-60" id="newDigit">
+                <ion-input color="warning" type="number" min="0" placeholder="Q" [(ngModel)]="selectedQuantity"></ion-input>
+            </ion-item>
+            <ion-label class="center-75" color="warning" >{{data.getItem(selectedItem)?.price || 0}}</ion-label>
+            <ion-button class="center-right" color="success" (click)="onAddItemButtonClick()">
+                <ion-icon name="add-circle-outline"></ion-icon>
+            </ion-button>
+        </ion-item>
+    </ion-list>
+    <ion-item color="success">
+        <ion-label class="center-10" id="total">Total</ion-label>
+        <ion-label class="center-60" id="total">{{getTotalQuantity()}}</ion-label>
+        <ion-label class="center-75" id="total">{{getTotalPrice()}}</ion-label>
+    </ion-item>
+</ion-content>

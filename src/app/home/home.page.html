@@ -1,0 +1,23 @@
+<ion-toolbar>
+    <ion-item color="tertiary" id="header">
+        <ion-title id="title">Your shopping lists</ion-title>
+        <ion-button class="center-right" color="success" (click)="OnAddButtonClick()">
+            <ion-icon name="add-outline"></ion-icon>
+        </ion-button>
+    </ion-item>
+    <ion-item color="tertiary">
+        <ion-label class="center-left" id="title">Name</ion-label>
+        <ion-icon class="center-75" name="cash-outline"></ion-icon>
+    </ion-item>
+</ion-toolbar>
+<ion-content>
+    <ion-list *ngFor="let shoplist of data.getShoppingLists()" id="list">
+        <ion-item item="none">
+            <ion-label class="center-left" color="secondary">{{shoplist.name}}</ion-label>
+            <ion-label class="center-75" id="total" color="warning">{{getTotalPrice(shoplist)}}</ion-label>
+            <ion-button class="center-right" color="success" (click)="goToListPage(shoplist)">
+                <ion-icon name="caret-forward-outline"></ion-icon>
+            </ion-button>
+        </ion-item>
+    </ion-list>
+</ion-content>
