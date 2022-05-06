@@ -12,12 +12,20 @@
 </ion-toolbar>
 <ion-content>
     <ion-list *ngFor="let shoplist of data.getShoppingLists()" id="list">
-        <ion-item item="none">
-            <ion-label class="center-left" color="secondary">{{shoplist.name}}</ion-label>
-            <ion-label class="center-75" id="total" color="warning">{{getTotalPrice(shoplist)}}</ion-label>
-            <ion-button class="center-right" color="success" (click)="goToListPage(shoplist)">
-                <ion-icon name="caret-forward-outline"></ion-icon>
-            </ion-button>
-        </ion-item>
+        <ion-item-sliding>
+            <ion-item-options side="start">
+              <ion-item-option color="danger" expandable (click)="data.removeShoppingList(shoplist)">
+                Delete
+              </ion-item-option>
+            </ion-item-options>
+
+            <ion-item item="none">
+                <ion-label class="center-left" color="secondary">{{shoplist.name}}</ion-label>
+                <ion-label class="center-75" id="total" color="warning">{{getTotalPrice(shoplist)}}</ion-label>
+                <ion-button class="center-right" color="success" (click)="goToListPage(shoplist)">
+                    <ion-icon name="caret-forward-outline"></ion-icon>
+                </ion-button>
+            </ion-item>
+          </ion-item-sliding>
     </ion-list>
 </ion-content>

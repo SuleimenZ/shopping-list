@@ -66,8 +66,8 @@ export class ShoppingListPage implements OnInit {
 
     async onCancelButtonClick() {
         this.shopList = { ...this.recoveryList };
-        await this.data.saveShoppingList(this.recoveryList);
         this.edit = !this.edit;
+        await this.data.saveShoppingList(this.recoveryList);
     }
 
     async onAddItemButtonClick() {
@@ -79,7 +79,7 @@ export class ShoppingListPage implements OnInit {
                 name: this.selectedItem,
                 price: await this.data.getItem(this.selectedItem).price,
             },
-            quantity: Math.floor(this.selectedQuantity) | 1,
+            quantity: Math.floor(this.selectedQuantity) || 1,
         } as ShoppingItem;
         await this.data.addItem(item.item);
         await this.data.addItemToList(this.shopList, item);

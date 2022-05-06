@@ -98,25 +98,33 @@ export class DataService {
         },
     ]);
     constructor() {
-        //For some unknown reason reading not working
-        //this.readFromDevice();
+        this.readFromDevice();
     }
 
-    getItems = () => this.items?.toArray().sort((a, b) => a.name.localeCompare(b.name));
+    getItems = () => {
+        if(this.items instanceof Array){
+            return this.items?.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        return this.items?.toArray().sort((a, b) => a.name.localeCompare(b.name));
+    }
 
     getItem = (name: string) => this.getItems().find((i) => i.name == name);
 
-    getShoppingLists = () =>
-        this.shoppingLists?.toArray().sort((a, b) => a.name.localeCompare(b.name));
+    getShoppingLists = () => {
+        if (this.shoppingLists instanceof Array){
+            return this.shoppingLists?.sort((a, b) => a.name.localeCompare(b.name)); 
+        }
+        return this.shoppingLists?.toArray().sort((a, b) => a.name.localeCompare(b.name)); 
+    }
 
     getShoppingList = (name: string) => {
-        let list = this.shoppingLists.firstOrDefault((l) => l.name == name);
+        let list = this.getShoppingLists().find(l => l.name == name);
         list.list.sort((a, b) => a.item.name.localeCompare(b.item.name));
         return list;
     };
 
     addItem = async (item: Item) => {
-        let exists = this.items.firstOrDefault((l) => l.name == item.name);
+        let exists = this.getItems().find((l) => l.name == item.name);
         if (exists || !item.name || item.price <= 0) {
             return false;
         }
@@ -125,24 +133,33 @@ export class DataService {
         return true;
     };
 
+    removeItem = async (item: Item) => {
+        let exists = this.getItems().find((l) => l.name == item.name);
+        if (exists) {
+            this.items = new List<Item>(this.getItems().filter(i => i.name != item.name));
+            await this.writeToDevice();
+            return true;
+        }
+        return false;
+    };
+
     addItemToList = async (from: ShoppingList, item: ShoppingItem) => {
-        let exists = this.shoppingLists
-            .firstOrDefault((list) => list.name == from.name)
+        let exists = this.getShoppingLists()
+            .find((list) => list.name == from.name)
             .list.find((l) => l.item.name == item.item.name);
         if (exists || item.quantity <= 0 || !item.item.name || item.item.price <= 0) {
             return false;
         }
-        let temp = this.shoppingLists.firstOrDefault((list) => list.name == from.name).list;
+        let temp = this.getShoppingLists().find((list) => list.name == from.name).list;
         let newList = new Array<ShoppingItem>(item, ...temp);
-        this.shoppingLists.firstOrDefault((list) => list.name == from.name).list = newList;
+        this.getShoppingLists().find((list) => list.name == from.name).list = newList;
         await this.writeToDevice();
         return true;
     };
 
     removeItemFromList = async (from: ShoppingList, item: ShoppingItem) => {
-        let temp = this.shoppingLists.firstOrDefault((list) => list.name == from.name).list;
-        if (item) {
-            this.shoppingLists.firstOrDefault((list) => list.name == from.name).list = temp.filter(
+        if (from) {
+            this.getShoppingLists().find((list) => list.name == from.name).list = from.list.filter(
                 (a) => a != item
             );
             await this.writeToDevice();
@@ -152,7 +169,7 @@ export class DataService {
     };
 
     addShoppingList = async (list: ShoppingList) => {
-        if (this.shoppingLists.contains(list)) {
+        if (this.getShoppingLists().includes(list)) {
             return false;
         }
         this.shoppingLists.push(list);
@@ -160,30 +177,51 @@ export class DataService {
         return true;
     };
 
+    removeShoppingList = async (list: ShoppingList) => {
+        let exists = this.getShoppingLists().find((l) => l.name == list.name);
+        if (exists) {
+            this.shoppingLists = new List<ShoppingList>(this.getShoppingLists().filter(i => i.name != list.name));
+            await this.writeToDevice();
+            return true;
+        }
+        return false;
+    };
+
     saveShoppingList = async (list: ShoppingList) => {
-        let old = this.shoppingLists.firstOrDefault((shoplist) => shoplist.name == list.name);
-        if (!(await this.addShoppingList(old))) {
-            this.shoppingLists.remove(old);
-            this.shoppingLists.push(list);
+        if (this.getShoppingLists().includes(list)) {
+            let temp = new Array(list, ...this.getShoppingLists().filter(l => l.name != list.name))
+            this.shoppingLists = new List<ShoppingList>(temp);
         }
         await this.writeToDevice();
         return true;
     };
 
     readFromDevice = async () => {
-        const deviceItems = await Filesystem.readFile({
-            path: APP_ITEMS,
-            directory: DIRECTORY,
-            encoding: Encoding.UTF8,
-        });
-        this.items = JSON.parse(deviceItems.data);
+        try{
+            const deviceItems = await Filesystem.readFile({
+                path: APP_ITEMS,
+                directory: DIRECTORY,
+                encoding: Encoding.UTF8,
+            });
+            this.items = JSON.parse(deviceItems.data);
 
-        const deviceLists = await Filesystem.readFile({
-            path: APP_LISTS,
-            directory: DIRECTORY,
-            encoding: Encoding.UTF8,
-        });
-        this.shoppingLists = JSON.parse(deviceLists.data);
+            const deviceLists = await Filesystem.readFile({
+                path: APP_LISTS,
+                directory: DIRECTORY,
+                encoding: Encoding.UTF8,
+            });
+            this.shoppingLists = JSON.parse(deviceLists.data);
+
+            //Making sure every item form shoplist is added.
+            for(let shopList of this.getShoppingLists()){
+                for(let shopItem of shopList.list){
+                    this.addItem(shopItem.item);
+                }
+            }
+        }catch (e){
+            //Directory does not exists
+            this.writeToDevice();
+        }
     }
 
     writeToDevice = async () => {
@@ -192,8 +230,8 @@ export class DataService {
                 path: APP_FOLDER,
                 directory: DIRECTORY
             });
-        } catch (e) {
-        // Directory already exitst
+        }catch (e) {
+            //Directory already exitst
         }
 
         await Filesystem.writeFile({
